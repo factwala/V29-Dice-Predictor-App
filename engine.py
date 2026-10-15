@@ -38,4 +38,35 @@ def score_v29(history, prior):
     return sorted(PAIRS,key=lambda p:(-scores[p],p))[:5]
 
 
+def score_details(history, prior):
+    if len(prior) != 5 or len(set(prior)) != 5 or not set(prior) <= set(PAIRS):
+        raise ValueError("Invalid baseline V28 ranking")
+
+    observed = [unordered_pair(x) for x in history[-WINDOW:]]
+    counts = Counter(observed)
+    rank = {p: j for j, p in enumerate(prior)}
+
+    freq = {
+        p: (counts[p] + 1) / (len(observed) + len(PAIRS))
+        for p in PAIRS
+    }
+
+    scores = {
+        p: (1-MIX)*max(0, 5-rank.get(p, 5))/15 + MIX*freq[p]
+        for p in PAIRS
+    }
+
+    ordered = sorted(PAIRS, key=lambda p: (-scores[p], p))
+
+    return [
+        {
+            "Rank": i + 1,
+            "Pair": pair,
+            "V29 Score": round(scores[pair], 6),
+            "Last 400 Frequency": counts[pair]
+        }
+        for i, pair in enumerate(ordered)
+    ]
+
+
 
