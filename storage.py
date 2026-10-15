@@ -5,7 +5,7 @@ import hmac
 import json
 import gspread
 from google.oauth2.service_account import Credentials
-from engine import seed_payload, validate_throw
+from engine import validate_throw
 
 HEADER=['throw','created_utc','model','history_count','history_fingerprint','v28_prior','prediction_top5','result','actual_pair','hit','completed_utc']
 
@@ -18,22 +18,51 @@ def open_book(settings):
     return client.open_by_key(settings['sheet_id'])
 
 def setup(book):
-    data,digest=seed_payload()
-    try: seed=book.worksheet('Seed672')
-    except gspread.WorksheetNotFound: seed=book.add_worksheet(title='Seed672',rows=750,cols=3)
-    existing=seed.get_all_values()
-    if not existing:
-        seed.update(range_name='A1',values=[['throw','original_result','V28_top5']]+data)
-        existing=seed.get_all_values()
-    expected=[['throw','original_result','V28_top5']]+data
-    if existing!=expected:
-        raise RuntimeError('Seed672 differs from original 672 rows. App blocked to protect data integrity.')
-    try: log=book.worksheet('LiveLog')
-    except gspread.WorksheetNotFound: log=book.add_worksheet(title='LiveLog',rows=5000,cols=len(HEADER))
-    vals=log.get_all_values()
-    if not vals: log.update(range_name='A1',values=[HEADER])
-    elif vals[0]!=HEADER: raise RuntimeError('LiveLog headers do not match the expected format.')
-    return seed,log,digest
+    seed = book.worksheet('Historical_Data')
+    rows = seed.get_all_values()
+
+    if not rows:
+        raise RuntimeError('Historical_Data is empty.')
+
+    header = rows[0]
+    required = ['throw', 'original_result', 'V28_top5']
+
+    if any(col not in header for col in required):
+        raise RuntimeError('Historical_Data columns are missing.')
+
+    indices = [header.index(col) for col in required]
+    data = []
+
+    for row in rows[1:]:
+        if not any(row):
+            continue
+        data.append([row[i] if i < len(row) else '' for i in indices])
+
+    if len(data) != 672:
+        raise RuntimeError('Expected exactly 672 historical throws.')
+
+    for number, row in enumerate(data, start=1):
+        if row[0] != str(number):
+            raise RuntimeError('Historical throw sequence mismatch.')
+
+    digest = hashlib.sha256(
+        json.dumps(data, separators=(',', ':'), ensure_ascii=False).encode()
+    ).hexdigest()
+
+    try:
+        log = book.worksheet('Live_Log')
+    except gspread.WorksheetNotFound:
+        log = book.add_worksheet(
+            title='Live_Log', rows=5000, cols=len(HEADER)
+        )
+
+    vals = log.get_all_values()
+    if not vals:
+        log.update(range_name='A1', values=[HEADER])
+    elif vals[0] != HEADER:
+        raise RuntimeError('Live_Log headers do not match.')
+
+    return seed, log, digest
 
 def get_state(seed,log):
     seedvals=seed.get_all_values()
