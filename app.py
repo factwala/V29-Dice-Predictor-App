@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import streamlit as st
 import pandas as pd
-from engine import seed_rows, score_v29, validate_throw
+from engine import score_v29, validate_throw
 from storage import open_book, setup, get_state, create_prediction, record_result
 
 st.set_page_config(page_title='V29 Dice Predictor', page_icon='🎲', layout='centered')
@@ -22,7 +22,7 @@ try:
     history, records,pending=get_state(seed,log)
     st.success(f'Google Sheets connected • {len(history)} saved throws')
     if not pending:
-        prior=seed_rows()[-1]['V28_top5'].split(';')
+        prior=seed.get_all_records()[-1]['V28_top5'].split(';')
         st.subheader(f'अगला Throw #{len(history)+1}')
         preview=score_v29(history,prior)
         st.write(' '.join(f'**{j}. `{p}`**　' for j,p in enumerate(preview,1)))
