@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import streamlit as st
 import pandas as pd
-from engine import score_v29, validate_throw
+from engine import score_v29, score_details, validate_throw
 from storage import open_book, setup, get_state, create_prediction, record_result
 
 st.set_page_config(page_title='V29 Dice Predictor', page_icon='🎲', layout='centered')
@@ -25,6 +25,17 @@ try:
         prior=seed.get_all_records()[-1]['V28_top5'].split(';')
         st.subheader(f'अगला Throw #{len(history)+1}')
         preview=score_v29(history,prior)
+                
+        details = score_details(history, prior)
+        with st.expander("📊 V29 Score Dashboard", expanded=False):
+            st.dataframe(
+                pd.DataFrame(details),
+                hide_index=True,
+                use_container_width=True
+            )
+            gap = details[4]["V29 Score"] - details[5]["V29 Score"]
+            st.caption(f"Rank 5 vs 6 Score Gap: {gap:.6f}")
+
         st.write(' '.join(f'**{j}. `{p}`**　' for j,p in enumerate(preview,1)))
         st.caption('यह preview है; नीचे LOCK दबाने पर prediction Google Sheets में दर्ज होगी।')
         if st.button('🔒 Prediction Lock & Save',type='primary'):
