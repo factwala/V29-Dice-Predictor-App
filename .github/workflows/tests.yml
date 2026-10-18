@@ -24,4 +24,4 @@ jobs:
           python-version: "3.11"
 
       - name: Run engine tests
-        run: python -m unittest -v test_engine.py
+        run: python -m unittest -v test_engine.py test_backtest.py
