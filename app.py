@@ -1,3 +1,28 @@
+"""Mobile-friendly V29 interface. Prediction and Google Sheets storage unchanged."""
+
+import hashlib
+import hmac
+from html import escape
+
+import pandas as pd
+import streamlit as st
+
+from engine import score_v29, score_details, validate_throw
+from storage import open_book, setup, get_state, create_prediction, record_result
+
+st.set_page_config(page_title="V29 Dice Predictor", page_icon="🎲", layout="centered")
+st.markdown("""
+<style>
+.block-container {max-width:700px; padding-top:1.25rem; padding-bottom:2rem;}
+div.stButton > button, div.stFormSubmitButton > button {min-height:3.2rem; border-radius:14px; font-size:1rem;}
+.pair-grid {display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; margin:12px 0 20px;}
+.pair-card {background:rgba(128,128,128,0.10); border:1px solid rgba(128,128,128,0.24); border-radius:14px; padding:15px 8px; text-align:center;}
+.pair-rank {font-size:.78rem; opacity:.72; margin-bottom:4px;}
+@media (max-width:650px) {
+  .block-container {padding-left:1rem; padding-right:1rem;}
+  .pair-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .pair-card {padding:16px 5px;}
+}
   .pair-value{font-size:1.17rem;}
   div[data-testid="stDataFrame"]{overflow-x:auto;}
 }
