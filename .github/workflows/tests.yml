@@ -24,3 +24,6 @@ jobs:
           python-version: "3.11"
       - name: Check Python syntax
         run: python -m compileall -q app.py engine.py storage.py test_engine.py test_backtest.py
+
+      - name: Run engine tests
+        run: python -m unittest -v test_engine.py test_backtest.py
