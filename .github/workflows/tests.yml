@@ -1,0 +1,29 @@
+
+name: V29 Engine Tests
+
+on:
+  push:
+    branches:
+      - v29-improvements
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check Python syntax
+        run: python -m compileall -q app.py engine.py storage.py test_engine.py test_backtest.py
+
+      - name: Run engine tests
+        run: python -m unittest -v test_engine.py test_backtest.py
