@@ -68,3 +68,14 @@ def compare_models(history, prior):
             "Rank 5/6 Gap": round(scores[ordered[4]] - scores[ordered[5]], 6),
         })
     return output
+
+
+def next_v28_prior(history):
+    """Original recovered V28 walk-forward generator; uses only past results."""
+    from recovered_v29_next import next_v28
+    return next_v28([validate_throw(x) for x in history])
+
+def predict_original_v29(history):
+    """Next live prediction, with live V28 prior rather than fixed last historical rank."""
+    prior = next_v28_prior(history)
+    return prior, score_v29(history, prior)

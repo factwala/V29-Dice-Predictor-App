@@ -7,7 +7,7 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from engine import score_v29, score_details, validate_throw
+from engine import score_v29, score_details, validate_throw, next_v28_prior
 from storage import open_book, setup, get_state, create_prediction, record_result
 
 st.set_page_config(page_title="V29 Dice Predictor", page_icon="🎲", layout="centered")
@@ -25,7 +25,6 @@ div.stButton > button, div.stFormSubmitButton > button {min-height:3.2rem; borde
 }
   .pair-value{font-size:1.17rem;}
   div[data-testid="stDataFrame"]{overflow-x:auto;}
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -42,7 +41,7 @@ def show_pairs(pairs):
 
 st.title("🎲 V29 Dice Predictor")
 st.caption("Top-5 unordered pairs · पहला पासा Special (1/2) · Google Sheets")
-st.info("मोड: Fixed V28 Prior के साथ V29 continuation. यह Original V28 Generator का प्रमाणित विकल्प नहीं है।")
+st.info("मोड: Original recovered V28 Generator + V29 historical scorer. पिछली 38.24% Accuracy भविष्य की गारंटी नहीं है।")
 
 try:
     required_secrets = ("sheet_id", "gcp_service_account", "app_pin_sha256")
@@ -62,7 +61,7 @@ try:
     st.success(f"Google Sheets connected · {len(history)} saved throws")
 
     if pending is None:
-        prior = seed.get_all_records()[-1]["V28_top5"].split(";")
+        prior = next_v28_prior(history)
         preview = score_v29(history, prior)
         details = score_details(history, prior)
 
